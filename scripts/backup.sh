@@ -12,7 +12,19 @@ OUTPUT_DIR="${1:-/tmp/openclaw-backups}"
 WORKSPACE_DIR="${HOME}/.openclaw/workspace"
 IDENTITY_FILE="${WORKSPACE_DIR}/IDENTITY.md"
 if [ -f "$IDENTITY_FILE" ]; then
-  AGENT_NAME=$(grep -m1 '\*\*Name:\*\*' "$IDENTITY_FILE" 2>/dev/null | sed 's/.*\*\*Name:\*\* *//' | tr -d '\r' | tr ' ' '-' | tr '[:upper:]' '[:lower:]')
+  AGENT_NAME=$(awk '
+    BEGIN { IGNORECASE = 1 }
+    /^\*\*Name:\*\*/ {
+      sub(/^.*\*\*Name:\*\*[[:space:]]*/, "", $0)
+      print
+      exit
+    }
+    /^-[[:space:]]*Name:/ {
+      sub(/^-[[:space:]]*Name:[[:space:]]*/, "", $0)
+      print
+      exit
+    }
+  ' "$IDENTITY_FILE" | tr -d '\r' | tr ' ' '-' | tr '[:upper:]' '[:lower:]')
 fi
 AGENT_NAME="${AGENT_NAME:-$(hostname)}"
 
